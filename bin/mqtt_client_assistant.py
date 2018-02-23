@@ -286,9 +286,9 @@ class MQTTClientAssistant:
         if matched:
             param = matched.groups()[0]
         try:
-            if param.lower() == "true":
+            if str(param).lower() == "true":
                 return True
-            elif param.lower() == "false":
+            elif str(param).lower() == "false":
                 return False
         except:
             pass
