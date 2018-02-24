@@ -13,7 +13,7 @@ import re
 __author__ = "lth liu2066@foxmail.com"
 
 ADDR = "192.168.110.12"  # 地址
-PORT = 1883  # 端口
+PORT = 1885  # 端口
 USERNAME = ""  # 用户名
 PASSWORD = ""  # 密码
 DEFAULT_TOPICS = "/test/topic"  # 默认订阅
@@ -66,6 +66,8 @@ DICTIONARYS = {
         "Command submitted. PRESS ENTER to reenter the EDIT MODE": "命令已提交. 回车再次进入编辑模式",
         "EDIT MODE (PRESS ENTER to confirm your command or exit EDIT MODE back to display receiving msg)":
             "编辑模式 (回车以确认命令, 或退出编辑模式)",
+        "disconnected": "连接断开",
+        "waiting for reconnecting ...": "等待重连...",
         "goodbye": "再见"
     },
     "en": {}
@@ -78,12 +80,33 @@ def _(text):
     return DICTIONARY.get(text, text)
 
 
+class KeyboardDisabler():
+    def __init__(self):
+        self.on = False
+
+    def getwch_loop(self):
+        import msvcrt
+        while self.on:
+            msvcrt.getwch()
+
+    def start(self):
+        self.on = True
+        threading.Thread(target=self.getwch_loop).start()
+
+    def stop(self):
+        self.on = False
+
+# todo for linux
+keyboard_disabler = KeyboardDisabler()
+
+
 class MQTTClientAssistant:
 
     def __init__(self):
         self.client = None
         self.queue = None
         self.stop = False
+        self.exit = False
         self.debug = DEBUG
         self.inputting = False
         self.subscribed_topics = []
@@ -110,6 +133,9 @@ class MQTTClientAssistant:
 
     def on_connect_to_mqtt_broker(self, client, userdata, flags, rc):
         if rc == 0:
+            self.stop = False
+            keyboard_disabler.stop()
+
             self.on_info(_("Connected successfully%s") % _(": debug is %s" % self.debug))
             self.client = client
             self.queue = Queue()
@@ -148,12 +174,18 @@ class MQTTClientAssistant:
             self.on_error(_("Putting queue failed: %s") % E)
 
     def on_disconnect_from_mqtt_broker(self, client, userdata, rc):
-        print(_("goodbye"))
+        self.stop = True
+        if not self.exit:
+            print(_("disconnected"))
 
     def start_mqtt_cmder(self):
         while not self.stop:
 
             cmd = "".join(list(self.multi_input())) if self.inputting else input()
+
+            if self.stop:
+                print(_("waiting for reconnecting ..."))
+                continue
 
             cmd_matched_input = re.match(r"^\s*$", cmd)
             if cmd_matched_input:
@@ -166,10 +198,11 @@ class MQTTClientAssistant:
 
             cmd_matched_exit = re.match(r"^\s*exit\s*$", cmd)
             if cmd_matched_exit:
-                self.stop = True
+                self.stop = self.exit = True
                 for topic in self.subscribed_topics:
                     self.client.unsubscribe(topic)
                 self.client.disconnect()
+                print(_("goodbye"))
                 break
 
             cmd_matched_help = re.match(r"^\s*(\w+)\s*$", cmd)
@@ -252,6 +285,8 @@ class MQTTClientAssistant:
 
             self.on_error(_("Invalid command"))
             self.inputting = False
+
+        keyboard_disabler.start()
 
     def start_mqtt_recver(self):
         while not self.stop:
