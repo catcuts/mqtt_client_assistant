@@ -134,7 +134,7 @@ class MQTTClientAssistant:
     def on_connect_to_mqtt_broker(self, client, userdata, flags, rc):
         if rc == 0:
             self.stop = False
-            keyboard_disabler.stop()
+            # keyboard_disabler.stop()
 
             self.on_info(_("Connected successfully%s") % _(": debug is %s" % self.debug))
             self.client = client
@@ -177,6 +177,9 @@ class MQTTClientAssistant:
         self.stop = True
         if not self.exit:
             print(_("disconnected"))
+        for topic in self.subscribed_topics:
+            self.client.unsubscribe(topic)
+        self.client.disconnect()
 
     def start_mqtt_cmder(self):
         while not self.stop:
@@ -184,8 +187,8 @@ class MQTTClientAssistant:
             cmd = "".join(list(self.multi_input())) if self.inputting else input()
 
             if self.stop:
-                print(_("waiting for reconnecting ..."))
-                continue
+                # print(_("waiting for reconnecting ..."))
+                break
 
             cmd_matched_input = re.match(r"^\s*$", cmd)
             if cmd_matched_input:
@@ -286,7 +289,7 @@ class MQTTClientAssistant:
             self.on_error(_("Invalid command"))
             self.inputting = False
 
-        keyboard_disabler.start()
+        # keyboard_disabler.start()
 
     def start_mqtt_recver(self):
         while not self.stop:
