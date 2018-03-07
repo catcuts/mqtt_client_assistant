@@ -13,7 +13,7 @@ import re
 __author__ = "lth liu2066@foxmail.com"
 
 ADDR = "192.168.110.12"  # 地址
-PORT = 1885  # 端口
+PORT = 1883  # 端口
 USERNAME = ""  # 用户名
 PASSWORD = ""  # 密码
 DEFAULT_TOPICS = "/test/topic"  # 默认订阅
