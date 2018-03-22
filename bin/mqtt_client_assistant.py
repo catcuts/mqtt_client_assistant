@@ -33,6 +33,18 @@ HELP = {
 }
 CMD_OPTS = ["PRESS ENTER 回车", "subscribe 订阅  ", "publish 发布    ", "config 配置     ", "exit 退出       "]
 
+# SHOW = dynamically generated
+
+SHOW_ITEMS = [
+    "Broker Address",
+    "Broker Port   ",
+    "Login Name    ",
+    "Login Password",
+    "Default Topics",
+    "Default Qos   ",
+    "Debug         "
+]
+
 DICTIONARYS = {
     "cn": {
         "Runtime error: %s": "运行时发生错误: %s",
@@ -182,6 +194,7 @@ class MQTTClientAssistant:
         self.client.disconnect()
 
     def start_mqtt_cmder(self):
+        global DEBUG
         while not self.stop:
 
             cmd = "".join(list(self.multi_input())) if self.inputting else input()
@@ -219,6 +232,21 @@ class MQTTClientAssistant:
                     print(_("\tAnywhere you can type %s to cancel current operation") % CANCEL_CHAR.replace("\s*", ""))
                     # self.inputting = False
                     continue
+                elif cmd_to_help == "show":
+                    SHOW = {
+                        "Broker Address": ADDR,
+                        "Broker Port": PORT,
+                        "Login Name": USERNAME or "N.A.",
+                        "Login Password": "******",
+                        "Default Topics": DEFAULT_TOPICS,
+                        "Default Qos": DEFAULT_TOPICS_QOS,
+                        "Debug": DEBUG 
+                    }
+                    for item in SHOW_ITEMS:
+                        print("\t{config}:\t{setting}"
+                                  .format(config=item,
+                                          setting=SHOW.get(re.sub(r"\s*$", "", item))))
+                    continue
                 else:
                     print("\t{cmd}:\t{help}".format(cmd=cmd_to_help, help=HELP.get(cmd_to_help.replace(" ", "")) or "Invalid command"))
                     print(_("\tAnywhere you can type %s to cancel current operation") % CANCEL_CHAR.replace("\s*", ""))
@@ -244,6 +272,7 @@ class MQTTClientAssistant:
                 self.debug = debug
                 self.on_info(_("debug=%s" % debug))
                 self.inputting = False
+                DEBUG = debug
                 continue
 
             cmd_matched_subscribe = re.match(r"\s*subscribe\s+((?:\s+--[^=]+\s*=\w+)*)[\s\n]*(.*)", cmd)
@@ -316,7 +345,10 @@ class MQTTClientAssistant:
             return
 
     @staticmethod
-    def get_param(params, name, default):
+    def get_param(params, name, default=None):
+        """
+        note: if name not found in params then return default
+        """
         if not params:
             return default
         param = default
