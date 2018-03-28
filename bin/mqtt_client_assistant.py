@@ -29,9 +29,19 @@ HELP = {
     "config 配置": "config --debug=true|false",
     "subscribe 订阅": "subscribe [--qos=0] <topic> <msg>",
     "publish 发布": "publish [--qos=0] [--retain=false] <topic>",
+    "show-info 连接信息": "show",
+    "clear-window 清屏": "clear",
     "exit 退出": "exit"
 }
-CMD_OPTS = ["PRESS ENTER 回车", "subscribe 订阅  ", "publish 发布    ", "config 配置     ", "exit 退出       "]
+CMD_OPTS = [
+    "PRESS ENTER 回车  ", 
+    "subscribe 订阅    ", 
+    "publish 发布      ", 
+    "config 配置       ", 
+    "show-info 连接信息",
+    "clear-window 清屏 ",
+    "exit 退出         "
+]
 
 # SHOW = dynamically generated
 
@@ -246,6 +256,10 @@ class MQTTClientAssistant:
                         print("\t{config}:\t{setting}"
                                   .format(config=item,
                                           setting=SHOW.get(re.sub(r"\s*$", "", item))))
+                    continue
+                elif cmd_to_help == "clear":
+                    print("\033[2J")
+                    self.on_info(_("Press Enter to edit your command"))
                     continue
                 else:
                     print("\t{cmd}:\t{help}".format(cmd=cmd_to_help, help=HELP.get(cmd_to_help.replace(" ", "")) or "Invalid command"))
