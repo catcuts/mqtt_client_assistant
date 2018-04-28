@@ -200,8 +200,8 @@ class MQTTClientAssistant:
         if not self.exit:
             print(_("disconnected"))
         for topic in self.subscribed_topics:
-            self.client.unsubscribe(topic)
-        self.client.disconnect()
+            client.unsubscribe(topic)
+        client.disconnect()
 
     def start_mqtt_cmder(self):
         global DEBUG
@@ -474,8 +474,8 @@ if __name__ == "__main__":
         assistant = MQTTClientAssistant()
         ADDR = assistant.get_param(params, "addr", ADDR)
         PORT = assistant.get_param(params, "port", PORT)
-        USERNAME = assistant.get_param(params, "username", USERNAME)
-        PASSWORD = assistant.get_param(params, "password", PASSWORD)
+        USERNAME = str(assistant.get_param(params, "username", USERNAME))
+        PASSWORD = str(assistant.get_param(params, "password", PASSWORD))
         DEFAULT_TOPICS = assistant.get_param(params, "default_topics", DEFAULT_TOPICS)
         DEFAULT_TOPICS_QOS = assistant.get_param(params, "default_topics_qos", DEFAULT_TOPICS_QOS)
         CANCEL_CHAR = str(assistant.get_param(params, "cancel_char", CANCEL_CHAR))
